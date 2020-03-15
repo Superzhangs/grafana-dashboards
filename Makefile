@@ -9,7 +9,14 @@ build:
 	cd pmm-app && npm i && npm run build && cd ..
 
 coverage:
-	cd pmm-app && npm i && npm run coverage && npm run build && cd ..
+	cd pmm-app && npm run coverage && cd ..
+
+e2e:
+	mkdir -pv pmm-app/logs pmm-app/video || true
+	cd pmm-app && docker-compose up -d
+	cd pmm-app && bash ./selenium.sh
+	npm i -g codeceptjs
+	cd pmm-app && codeceptjs run-multiple parallel --all --steps --grep '(?=.*)^(?!.*@visual-test)'
 
 pack:
 	tar czf pmm-app.tar.gz pmm-app
@@ -32,7 +39,7 @@ disable:
 enable:
 	curl -X POST --retry-delay 5 --retry 5 'http://admin:admin@localhost/graph/api/plugins/pmm-app/settings' -d 'enabled=true'
 
-test: coverage build pack disable install enable
+test: build e2e coverage pack disable install enable
 
 clean:
 	rm -r pmm-app/dist/
